@@ -143,6 +143,17 @@ let main () =
       else prog
     in
 
+    let prog =
+      if !target_arch = X86_64 && !should_slh_gen then
+        let msf_var, prog =
+          Slh_gen.add_slh prog !should_spill_msf Arch.reg_of_bool
+        in
+        let prog = Protect.protect_gen Arch.is_ct_sopn msf_var prog [] in
+        prog
+      else prog
+    in
+
+
     (* The source program, before any compilation pass. *)
     let source_prog = prog in
 
@@ -177,12 +188,14 @@ let main () =
           let out = open_out !ecfile in
           let fmt = Format.formatter_of_out_channel out in
           fmt, fun () -> close_out out in
+      let fnames =
+        match !ec_list with
+        | [] -> List.map (fun { f_name ; _ } -> f_name.fn_name) (snd prog)
+        | fnames -> fnames in
       begin try
         BatPervasives.finally
           (fun () -> close ())
-          (fun () ->
-            ToEC.extract prog Arch.reg_size Arch.asmOp !model !ec_list (Some !ec_array_path) fmt
-          )
+          (fun () -> ToEC.extract Arch.reg_size Arch.asmOp fmt !model prog fnames)
           ()
       with e ->
         BatPervasives.ignore_exceptions

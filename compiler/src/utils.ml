@@ -419,6 +419,7 @@ type warning =
   | Deprecated
   | Experimental
   | Always
+  | Protect
 
 let warns = ref None
 

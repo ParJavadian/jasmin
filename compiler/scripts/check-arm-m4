@@ -1,20 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 set -e
 
-ROOT_DIR=tests/results/check-arm-m4
-TEST_FILE="${@: -1}"
-# Concatenate all args (except test file name - last arg)
-ARGS_CAT=args-$(
-	IFS=""
-	echo "${*:1:$#-1}"
-)
-DIR=$ROOT_DIR/${TEST_FILE%.jazz}/$ARGS_CAT
+DIR=$(mktemp -d jasminXXXXXX)
 ASM=${DIR}/jasmin.s
 OBJ=${DIR}/jasmin.o
 
-if [ -d "${DIR}" ]; then rm -r ${DIR}; fi
-mkdir -p $DIR
+trap "rm -r ${DIR}" EXIT
 
 set -x
 

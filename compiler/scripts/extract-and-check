@@ -1,27 +1,25 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 set -e
 
-ROOT_DIR=tests/results/extraction
-DIR=$ROOT_DIR/${2%.jazz}/$1
-ECLIB=$(dirname $0)/../../eclib
+DIR=$(mktemp -d jasminXXXXXX)
 EC=${DIR}/jasmin.ec
 CT=${DIR}/jasmin_ct.ec
 
-if [ -d "${DIR}" ]; then rm -r ${DIR}; fi
-mkdir -p $DIR
-
-if [ "$1" = "arm" ]; then
+if [ "$1" = "arm" ]
+then
+	shift
 	ARCH="-arch arm-m4"
 else
 	ARCH="-arch x86-64"
 fi
 
+trap "rm -r ${DIR}" EXIT
+
 set -x
-set -o xtrace
 
-$(dirname $0)/../jasminc ${ARCH} -oecarray ${DIR} -oec ${EC} "$2"
-$(dirname $0)/../jasminc ${ARCH} -oecarray ${DIR} -CT -oec ${CT} "$2"
+$(dirname $0)/../jasminc ${ARCH} -oecarray ${DIR} -oec ${EC} "$@"
+$(dirname $0)/../jasminc ${ARCH} -oecarray ${DIR} -CT -oec ${CT} "$@"
 
-easycrypt -I Jasmin:${ECLIB} ${ECARGS} ${EC}
-easycrypt -I Jasmin:${ECLIB} ${ECARGS} ${CT}
+easycrypt ${ECARGS} ${EC}
+easycrypt ${ECARGS} ${CT}

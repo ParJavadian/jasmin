@@ -85,7 +85,6 @@ module X86_core = struct
     | MOVSX _ -> true
     | MOVV _ -> true
     | MOVX _ -> true
-    | POR -> true
     | MOVZX _ -> true
     | MUL _ -> true
     | MULX_lo_hi _ -> true
@@ -204,6 +203,8 @@ module X86_core = struct
     | Ox86SLHmove       -> true
     | Ox86SLHprotect _  -> true
 
+  let reg_of_bool x b =
+    Prog.Copn([ Lvar x ], AT_none, X86_extra.coq_Ox86 atoI X86_instr_decl.SETcc, [ Pvar b ])
 end
 
 

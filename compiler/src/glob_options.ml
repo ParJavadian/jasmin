@@ -113,6 +113,9 @@ type call_conv = Linux | Windows
 
 let call_conv = ref Linux (* Default value is chosen on start-up in `main_compiler` *)
 
+let should_slh_gen = ref false
+let should_spill_msf = ref false
+
 let set_cc cc = 
   let cc = 
     match cc with
@@ -177,10 +180,10 @@ let options = [
     "-nolea"   , Arg.Clear lea         , " Try to use add and mul instead of lea";
     "-set0"     , Arg.Set set0          , " Use [xor x x] to set x to 0 (default is not)";
     "-noset0"   , Arg.Clear set0        , " Do not use set0 option";
-    "-ec"       , Arg.String  set_ec    , "[f] Extract function [f] and its dependencies to an easycrypt file (deprecated)";
-    "-oec"     ,  Arg.Set_string ecfile , "[filename] Use filename as output destination for easycrypt extraction (deprecated)";
-    "-oecarray" , Arg.String set_ec_array_path, "[dir] Output easycrypt array theories to the given path (deprecated)";
-    "-CT" , Arg.Unit set_constTime      , " Generate model for constant time verification (deprecated)";
+    "-ec"       , Arg.String  set_ec    , "[f] Extract function [f] and its dependencies to an easycrypt file";
+    "-oec"     ,  Arg.Set_string ecfile , "[filename] Use filename as output destination for easycrypt extraction";
+    "-oecarray" , Arg.String set_ec_array_path, "[dir] Output easycrypt array theories to the given path";
+    "-CT" , Arg.Unit set_constTime      , " Generate model for constant time verification";
     "-slice"    , Arg.String set_slice  , "[f] Keep function [f] and everything it needs";
     "-checksafety", Arg.Unit set_checksafety, " Automatically check for safety";
     "-safetyparam", Arg.String set_safetyparam,
@@ -217,7 +220,9 @@ let options = [
     "-stack-zero-size",
       Arg.Symbol (List.map fst Annot.ws_strings, set_stack_zero_size),
       " Select stack zeroization size for export functions";
-    "-pliveness", Arg.Set print_liveness, " Print liveness information during register allocation"
+    "-pliveness", Arg.Set print_liveness, " Print liveness information during register allocation";
+    ("-slh-gen", Arg.Set should_slh_gen, " enable slh_gen");
+    ("-spill-msf", Arg.Set should_spill_msf, " enable msf spilling to mmx");
   ] @  List.map print_option Compiler.compiler_step_list @ List.map stop_after_option Compiler.compiler_step_list
 
 let usage_msg = "Usage : jasminc [option] filename"

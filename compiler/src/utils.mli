@@ -179,6 +179,7 @@ type warning =
   | Deprecated
   | Experimental
   | Always
+  | Protect
 
 val nowarning : unit -> unit
 val add_warning : warning -> unit -> unit 

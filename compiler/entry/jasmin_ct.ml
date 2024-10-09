@@ -3,7 +3,7 @@ open Cmdliner
 open CommonCLI
 open Utils
 
-let parse_and_check arch call_conv =
+let parse_and_check arch call_conv should_slh_gen should_spill_msf =
   let module A = (val get_arch_module arch call_conv) in
   let check ~doit infer ct_list speculative pass file =
     let _env, pprog, _ast =
@@ -21,6 +21,15 @@ let parse_and_check arch call_conv =
       try Compile.preprocess A.reg_size A.asmOp pprog
       with Typing.TyError (loc, code) ->
         hierror ~loc:(Lmore loc) ~kind:"typing error" "%s" code
+    in
+
+    let prog =
+      if arch = Amd64 && should_slh_gen then
+        let msf_var, prog =
+          Slh_gen.add_slh prog should_spill_msf A.reg_of_bool
+        in
+        Protect.protect_gen (A.is_ct_sopn ~doit) msf_var prog ct_list
+      else prog
     in
 
     let prog =
@@ -83,6 +92,14 @@ let speculative =
   let doc = "Check for S-CT" in
   Arg.(value & flag & info [ "speculative"; "sct" ] ~doc)
 
+let should_slh_gen =
+  let doc = "Enable selSLH generation" in
+  Arg.(value & flag & info [ "slh-gen" ] ~doc)
+
+let should_spill_msf =
+  let doc = "Enable MSF spilling to MMX in selSLH gen" in
+  Arg.(value & flag & info [ "spill-msf" ] ~doc)
+
 let slice =
   let doc =
     "Only check the given function (and its dependencies). This argument may \
@@ -128,6 +145,15 @@ let () =
   in
   Cmd.v info
     Term.(
-      const parse_and_check $ arch $ call_conv $ infer $ slice $ speculative
-      $ compile $ file $ doit)
-  |> Cmd.eval |> exit
+      const parse_and_check
+      $ arch
+      $ call_conv
+      $ should_slh_gen
+      $ should_spill_msf
+      $ infer
+      $ slice
+      $ speculative
+      $ compile
+      $ file
+      $ doit
+  ) |> Cmd.eval |> exit

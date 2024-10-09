@@ -40,6 +40,7 @@ module type Core_arch = sig
   val is_ct_asm_extra : extra_op -> bool
   val is_doit_asm_extra : extra_op -> bool
 
+  val reg_of_bool : 'a gvar_i -> 'a ggvar -> ('a, 'b, (reg, regx, xreg, rflag, cond, asm_op, extra_op) extended_op) ginstr_r
 end
 
 module type Arch = sig

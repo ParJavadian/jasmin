@@ -99,6 +99,7 @@ module Arm_core = struct
     | Oarm_add_large_imm -> true
     | (Osmart_li _ | Osmart_li_cc _) -> true (* emit MOVT *)
 
+  let reg_of_bool _ _ = assert false
 end
 
 module Arm (Lowering_params : Arm_input) : Arch_full.Core_arch = struct

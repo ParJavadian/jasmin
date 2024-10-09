@@ -1,0 +1,88 @@
+fn load_plain( reg const ptr u64[3] p,  reg mut ptr u64[3] w,  reg u64 i) -> reg ptr u64[3]{
+    reg u64 x;
+    x = p[i];
+    return w;
+}
+
+fn leak_plain( reg mut ptr u64[3] w,  reg u64 i) -> reg ptr u64[3]{
+    reg u64 x;
+    x = i;
+    w[x] = 0;
+    return w;
+}
+
+fn load_and_leak_plain( reg const ptr u64[3] p,  reg mut ptr u64[3] w,  reg u64 i) -> reg ptr u64[3]{
+    reg u64 x,y;
+    x = p[i];
+    y = x;
+    w[x+y] = 0;
+    return w;
+}
+
+fn testannot() -> reg u64{
+  reg u64 t;
+  t = 5;
+  #protect t = t;
+  return t;
+}
+
+// fn load(#public reg const ptr u64[3] p, #public reg mut ptr u64[3] w, #public reg u64 i) -> reg ptr u64[3]{
+//     reg u64 x;
+//     x = p[i];p
+//     return w;
+// }
+
+// fn leak(#public reg mut ptr u64[3] w, #public reg u64 i) -> reg ptr u64[3]{
+//     reg u64 x;
+//     x = i;
+//     w[x] = 0;
+//     return w;
+// }
+
+// fn load_and_leak(#public reg const ptr u64[3] p, #public reg mut ptr u64[3] w, #public reg u64 i) -> reg ptr u64[3]{
+//     reg u64 x;
+//     x = p[i];
+//     w[x] = 0;
+//     return w;
+// }
+
+fn no_protect(reg const ptr u64[3] p, reg mut ptr u64[3] w, reg u64 i) -> reg ptr u64[3]{
+    reg u64 x;
+    // reg u64 msf;
+    // msf = #init_msf();
+    inline bool temp;
+    temp = i < 3;
+    if (temp){
+        // msf = #update_msf(temp, msf);
+        x = p[i];
+    }
+    else{
+        // msf = #update_msf(!temp, msf);
+        x = 0;
+    }
+    // x = #protect(x, msf);
+    w[x] = 0;
+    return w;
+}
+param int N = 20;
+
+fn fig3a(
+  reg const ptr u64[N] p,
+  reg mut ptr u64[N] w,
+  reg u64 i)
+  ->  reg mut ptr u64[N] {
+  reg u64  x;
+  reg bool b;
+//   ms = #init_msf();
+  b = i < N;
+  if b {
+    // ms = #update_msf(b, ms);
+    x = p[i];
+    // x = #protect(x, ms);
+  } else {
+    // ms = #update_msf(! b, ms);
+  }
+  w[x] = 0;
+  return w;
+}
+

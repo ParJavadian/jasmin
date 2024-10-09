@@ -1,0 +1,104 @@
+// Expect no protect.
+fn protect_store_one_mem_public(#public reg u64 p) {
+    [p] = 0;
+}
+
+// Expect one protect.
+fn protect_store_one_mem_transient(#transient reg u64 p) {
+    [p] = 0;
+}
+
+// Expect no protect.
+fn protect_store_one_mem(reg u64 p) {
+    [p] = 0;
+}
+
+// Expect one protect because of the caller.
+fn protect_store_one_mem1(reg u64 p) {
+    [p] = 0;
+}
+
+fn protect_store_one_mem_caller(#transient reg u64 p) {
+    protect_store_one_mem1(p);
+}
+
+//result: 
+// fn protect_store_one_mem1 (reg u64 .msf13, reg u64 p) -> (reg u64) {
+  
+//   (u64)[#unaligned p + ((64u) 0)] = ((64u) 0); /* u64 */
+//   return (.msf13);
+// }
+
+// fn protect_store_one_mem_caller (reg u64 .msf10, reg u64 p) -> (reg u64) {
+  
+//   p = #protect_64(p, .msf10); /*  */
+//   .msf10 = protect_store_one_mem1(.msf10, p);
+//   return (.msf10);
+// }
+
+
+fn protect_store_one_ptr(
+  reg ptr u64[3] p, reg ptr u64[3] w, reg u64 i
+) -> reg ptr u64[3] {
+    reg u64 x y;
+    x = p[i];
+    y = 0;
+    w[x + y] = 0;
+    return w;
+}
+
+fn protect_store_two_ptr
+    (reg ptr u64[3] p, reg ptr u64[3] w, reg u64 i) -> reg ptr u64[3] {
+    reg u64 x y;
+    x = p[i];
+    y = x;
+    w[x + y] = 0;
+    return w;
+}
+
+fn loop(reg ptr u64[3] a) -> reg u64 {
+  reg u64 i x;
+  i = 0;
+  while (i < 3) {
+    x = a[i];
+    i = a[x];
+    i += 1;
+  }
+  return x;
+}
+
+fn loop2(reg ptr u64[3] a, reg u64 x) -> reg u64 {
+  reg u64 i;
+  x = a[x];
+  while (x < 3) {
+    x += 1;
+  }
+  return x;
+}
+
+// Reg bool variables that leak need to enforce that their RHSs are public.
+fn loop_cmp(reg ptr u64[3] a, reg u64 x) -> reg u64 {
+    inline bool b;
+    reg u64 i;
+    x = a[x];
+    while {
+      ?{ "<s" = b } = #CMP(x, 3);
+    } (b) {
+      x += 1;
+    }
+    return x;
+}
+
+fn mem_cmp(reg ptr u64[1] p) -> reg u64 {
+    reg u64 i;
+    i = 0;
+
+    reg bool b;
+    while {
+        ?{ "<s" = b } = #CMP(p[i], 0);
+    } (b) {
+        i += 1;
+    }
+
+    return i;
+}

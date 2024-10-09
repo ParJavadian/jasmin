@@ -1,17 +1,15 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 set -e
 
-ROOT_DIR=tests/results/parse-print-parse
-TEST_FILE=${@: -1}
-DIR=$ROOT_DIR/${2%.jazz}/$1
+DIR=$(mktemp -d jasminXXXXXX)
 OUT=${DIR}/jasmin.jazz
 
-if [ -d "${DIR}" ]; then rm -r ${DIR}; fi
-mkdir -p $DIR
+trap "rm -r ${DIR}" EXIT
 
 if [ "$1" = "arm" ]
 then
+    shift
     ARCH="-arch arm-m4"
 else
     ARCH="-arch x86-64"
@@ -20,8 +18,8 @@ fi
 set -x
 
 # Check that no printer crashes
-$(dirname $0)/../jasminc ${ARCH} -pall "$2" >/dev/null
+$(dirname $0)/../jasminc ${ARCH} -pall "$@" >/dev/null
 # Pretty-print the program before compilation
-$(dirname $0)/../jasminc ${ARCH} -ptyping "$2" > ${OUT}
+$(dirname $0)/../jasminc ${ARCH} -ptyping "$@" > ${OUT}
 # Try to parse it and type-check it again
 $(dirname $0)/../jasminc ${ARCH} -until_typing ${OUT}
